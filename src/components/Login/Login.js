@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
 import Button from "../UI/Button/Button";
+import AuthContext from "../../store/auth-context";
+import Input from "../Input/Input";
 
 const emailReducer = (state, action) => {
   if(action.type === 'USER_INPUT'){
@@ -56,6 +58,8 @@ const Login = (props) => {
     value: "",
     isValid: null,
   });
+
+  const authCtx = useContext(AuthContext);
   useEffect(() => {
     console.log("Effect Running");
     return () => {
@@ -63,21 +67,26 @@ const Login = (props) => {
     };
   }, []);
 
-  // useEffect(()=>{
-  //   console.log('hi');
-  //   const identifier = setTimeout(() =>{
-  //     setFormIsValid(
-  //       enteredEmail.includes('@') && enteredPassword.trim().length > 6 && enteredcollegeName.trim().length > 0
-  //     );
-  //     return ()=>{};
+  const {isValid : emailIsValid} = emailState;
+  const { isValid: passwordIsValid} = passwordState;
+  const { isValid: collegeIsValid} = collageNameState;
 
-  //   }, 500)
-  //   return () =>{
-  //     console.log("CLEAN UP");
-  //     clearTimeout(identifier);
-  //   };
+  useEffect(()=>{
+    
+    const identifier = setTimeout(() =>{
+        
+      console.log('Checking form validity');
+       setFormIsValid(emailIsValid && passwordIsValid && collegeIsValid);
+    
+     
+}, 500);
 
-  // },[setFormIsValid, enteredEmail, enteredPassword , enteredcollegeName])
+    return () =>{
+      console.log("CLEAN UP");
+      clearTimeout(identifier);
+    };
+
+  },[emailIsValid, collegeIsValid, passwordIsValid]);
 
   const emailChangeHandler = (event) => {
     dispatchEmail({type: 'USER_INPUT', val:event.target.value});
@@ -123,54 +132,44 @@ const Login = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(emailState.value, passwordState.value, collageNameState.value);
+   authCtx.onLogin(emailState.value, passwordState.value, collageNameState.value);
   };
 
   return (
     <Card className={classes.login}>
       <form onSubmit={submitHandler}>
-        <div
-          className={`${classes.control} ${
-            emailState.isValid === false ? classes.invalid : ""
-          }`}
-        >
-          <label htmlFor="email">E-Mail</label>
-          <input
-            type="email"
-            id="email"
-            value={emailState.value}
-            onChange={emailChangeHandler}
-            onBlur={validateEmailHandler}
-          />
-        </div>
-        <div
-          className={`${classes.control} ${
-            collageNameState.isValid=== false ? classes.invalid : ""
-          }`}
-        >
-          <label htmlFor="college">College Name</label>
-          <input
+        <Input
+         id="email"
+         label ="E-Mail"
+         type="email" 
+         isValid = {emailIsValid} 
+         value={emailState.value}
+         onChange = {emailChangeHandler}
+         onBlur = {validateEmailHandler}/>
+        
+    
+      <Input
             type="text"
             id="college"
+            label ="College Name"
+            isValid = {collegeIsValid}
             value={collageNameState.value}
             onChange={collegeNameChangeHandler}
             onBlur={validateCollegeNameHandler}
           />
-        </div>
-        <div
-          className={`${classes.control} ${
-            passwordState.isValid === false ? classes.invalid : ""
-          }`}
-        >
-          <label htmlFor="password">Password</label>
-          <input
+        
+        
+         
+          <Input
             type="password"
             id="password"
+            label = "Password"
+            isValid = {passwordIsValid}
             value={passwordState.value}
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
-        </div>
+      
 
         <div className={classes.actions}>
           <Button type="submit" className={classes.btn} disabled={!formIsValid}>
